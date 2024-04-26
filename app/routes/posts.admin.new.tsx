@@ -10,8 +10,6 @@ import { createPost } from "~/models/post.server";
 export const action = async ({
     request,
 }: ActionFunctionArgs) => {
-    // TODO: remove me
-    await new Promise((res) => setTimeout(res, 1000));
 
     const formData = await request.formData();
 

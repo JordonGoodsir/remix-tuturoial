@@ -5,7 +5,7 @@ import {
 } from "@remix-run/react";
 import invariant from "tiny-invariant";
 
-import { getPost, updatePost } from "~/models/post.server";
+import { getPost, updatePost, deletePost } from "~/models/post.server";
 
 export const loader = async ({
     params,
@@ -19,7 +19,17 @@ export const loader = async ({
 };
 
 export const action = async (data: ActionFunctionArgs) => {
+
     const formData = await data.request.formData();
+    const intent = formData.get('intent')
+
+    // update request
+    if (intent === 'delete') {
+        await deletePost(data.params.slug as string)
+        return redirect("/posts/admin");
+    }
+
+    // post request
     const oldPost = await getPost(data.params.slug);
 
     const formFields: string[] = ['title', 'slug', 'markdown']
@@ -61,55 +71,65 @@ export default function PostSlug() {
         navigation.state === "submitting"
     );
     return (
-        <Form method="put">
-            <p>   {errors?.global ? (
-                <em className="text-red-600">{errors?.global}</em>
-            ) : null}</p>
-            <p>
-                <label>
-                    Post Title:{" "}
-                    {errors?.title ? (
-                        <em className="text-red-600">{errors.title}</em>
-                    ) : null}
-                    <input defaultValue={post.title} type="text" name="title" className={inputClassName} />
-                </label>
-            </p>
-            <p>
-                <label>
-                    Post Slug:{" "}
-                    {errors?.slug ? (
-                        <em className="text-red-600">{errors.slug}</em>
-                    ) : null}
-                    <input defaultValue={post.slug} type="text" name="slug" className={inputClassName} />
-                </label>
-            </p>
-            <p>
-                <label htmlFor="markdown">
-                    Markdown:{" "}
-                    {errors?.markdown ? (
-                        <em className="text-red-600">
-                            {errors.markdown}
-                        </em>
-                    ) : null}
-                </label>
-                <br />
-                <textarea
-                    id="markdown"
-                    rows={20}
-                    name="markdown"
-                    defaultValue={post.markdown}
-                    className={`${inputClassName} font-mono`}
-                />
-            </p>
-            <p className="text-right">
-                <button
-                    type="submit"
-                    className="rounded bg-blue-500 py-2 px-4 text-white hover:bg-blue-600 focus:bg-blue-400 disabled:bg-blue-300"
-                    disabled={isCreating}
-                >
-                    {isCreating ? "Creating..." : "Update Post"}
-                </button>
-            </p>
-        </Form>
+        <div>
+            <Form method="put">
+                <p>   {errors?.global ? (
+                    <em className="text-red-600">{errors?.global}</em>
+                ) : null}</p>
+                <p>
+                    <label>
+                        Post Title:{" "}
+                        {errors?.title ? (
+                            <em className="text-red-600">{errors.title}</em>
+                        ) : null}
+                        <input defaultValue={post.title} type="text" name="title" className={inputClassName} />
+                    </label>
+                </p>
+                <p>
+                    <label>
+                        Post Slug:{" "}
+                        {errors?.slug ? (
+                            <em className="text-red-600">{errors.slug}</em>
+                        ) : null}
+                        <input defaultValue={post.slug} type="text" name="slug" className={inputClassName} />
+                    </label>
+                </p>
+                <p>
+                    <label htmlFor="markdown">
+                        Markdown:{" "}
+                        {errors?.markdown ? (
+                            <em className="text-red-600">
+                                {errors.markdown}
+                            </em>
+                        ) : null}
+                    </label>
+                    <br />
+                    <textarea
+                        id="markdown"
+                        rows={20}
+                        name="markdown"
+                        defaultValue={post.markdown}
+                        className={`${inputClassName} font-mono`}
+                    />
+                </p>
+                <div className="text-right flex gap-5">
+                    <button
+                        type="submit"
+                        className="rounded bg-blue-500 py-2 px-4 text-white hover:bg-blue-600 focus:bg-blue-400 disabled:bg-blue-300"
+                        disabled={isCreating}
+                    >
+                        {isCreating ? "Creating..." : "Update Post"}
+                    </button>
+                    <button
+                        type="submit"
+                        name="intent"
+                        value="delete"
+                        className="rounded bg-blue-500 py-2 px-4 text-white hover:bg-blue-600 focus:bg-blue-400 disabled:bg-blue-300"
+                    >
+                        Delete
+                    </button>
+                </div>
+            </Form>
+        </div>
     );
 }
