@@ -1,30 +1,49 @@
 import type { ActionFunctionArgs } from "@remix-run/node";
 import { json, redirect } from "@remix-run/node";
-import { Form, useActionData } from "@remix-run/react";
+import {
+    Form, useActionData, useNavigation,
+} from "@remix-run/react";
+import invariant from "tiny-invariant";
 
 import { createPost } from "~/models/post.server";
 
 export const action = async ({
     request,
 }: ActionFunctionArgs) => {
+    // TODO: remove me
+    await new Promise((res) => setTimeout(res, 1000));
+
     const formData = await request.formData();
 
-    const title = formData.get("title");
-    const slug = formData.get("slug");
-    const markdown = formData.get("markdown");
+    const formFields: string[] = ['title', 'slug', 'markdown']
 
-    const errors = {
-        title: title ? null : "Title is required",
-        slug: slug ? null : "Slug is required",
-        markdown: markdown ? null : "Markdown is required",
-    };
-    const hasErrors = Object.values(errors).some(
+    const formInfo = formFields.reduce((formInfo, field) => {
+        formInfo.fields[field] = formData.get(field)
+        formInfo.errors[field] = formData.get(field) ? null : `${field} is required`
+
+        return formInfo
+    }, { errors: {}, fields: {} } as any)
+
+    const hasErrors = Object.values(formInfo.errors).some(
         (errorMessage) => errorMessage
     );
     if (hasErrors) {
-        return json(errors);
+        return json(formInfo.errors);
     }
 
+    const { title, slug, markdown } = formInfo.fields
+    invariant(
+        typeof title === "string",
+        "title must be a string"
+    );
+    invariant(
+        typeof slug === "string",
+        "slug must be a string"
+    );
+    invariant(
+        typeof markdown === "string",
+        "markdown must be a string"
+    );
     await createPost({ title, slug, markdown });
 
     return redirect("/posts/admin");
@@ -35,6 +54,11 @@ const inputClassName =
 
 export default function NewPost() {
     const errors = useActionData<typeof action>();
+
+    const navigation = useNavigation();
+    const isCreating = Boolean(
+        navigation.state === "submitting"
+    );
 
     return (
         <Form method="post">
@@ -77,8 +101,9 @@ export default function NewPost() {
                 <button
                     type="submit"
                     className="rounded bg-blue-500 py-2 px-4 text-white hover:bg-blue-600 focus:bg-blue-400 disabled:bg-blue-300"
+                    disabled={isCreating}
                 >
-                    Create Post
+                    {isCreating ? "Creating..." : "Create Post"}
                 </button>
             </p>
         </Form>
