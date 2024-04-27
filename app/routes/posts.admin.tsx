@@ -2,10 +2,12 @@ import { json } from "@remix-run/node";
 import {
     Link, useLoaderData, Outlet,
 } from "@remix-run/react";
+import { requireUser } from "../session.server"
 
 import { getPosts } from "~/models/post.server";
 
-export const loader = async () => {
+export const loader = async ({ request }) => {
+    await requireUser(request)
     return json({ posts: await getPosts() });
 };
 

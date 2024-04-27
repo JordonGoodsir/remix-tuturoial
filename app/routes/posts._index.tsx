@@ -1,20 +1,24 @@
-import { json } from "@remix-run/node";
+import { LoaderFunctionArgs, json } from "@remix-run/node";
 import { Link, useLoaderData } from "@remix-run/react";
+import { getUser } from "../session.server"
 
 import { getPosts } from "~/models/post.server";
 
-export const loader = async () => {
-    return json({ posts: await getPosts() });
+export const loader = async ({ request }: LoaderFunctionArgs) => {
+    const test = await getUser(request)
+    const isAuthenticated = !!test?.email
+    return json({ posts: await getPosts(), isAuthenticated });
+
 };
 
 export default function Posts() {
-    const { posts } = useLoaderData<typeof loader>();
+    const { posts, isAuthenticated } = useLoaderData<typeof loader>();
     return (
         <main>
             <h1>Posts</h1>
-            <Link to="admin" className="text-red-600 underline">
+            {isAuthenticated ? <Link to="admin" className="text-red-600 underline">
                 Admin
-            </Link>
+            </Link> : null}
             <ul>
                 {posts.map((post: any) => (
                     <li key={post.slug}>
