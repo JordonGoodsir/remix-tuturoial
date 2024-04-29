@@ -18,7 +18,7 @@ export const loader = async ({
   return json({ html, post });
 };
 
-export default function PostSlug() {
+export default function PostRoute() {
   const { html, post } = useLoaderData<typeof loader>();
   return (
     <main className="mx-auto max-w-4xl">

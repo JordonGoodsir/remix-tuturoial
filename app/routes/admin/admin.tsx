@@ -2,7 +2,7 @@ import { json } from "@remix-run/node";
 import {
     Link, useLoaderData, Outlet,
 } from "@remix-run/react";
-import { requireUser } from "../session.server"
+import { requireUser } from "~/session.server"
 
 import { getPosts } from "~/models/post.server";
 
